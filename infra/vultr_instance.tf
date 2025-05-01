@@ -10,7 +10,7 @@ resource "vultr_ssh_key" "default" {
 resource "vultr_instance" "current" {
   region      = local.default_region
   plan        = "vc2-4c-8gb"
-  os_id       = 2571
+  os_id       = 2284
   label       = "current-vm"
   hostname    = "current-host"
   ssh_key_ids = [vultr_ssh_key.default.id]
