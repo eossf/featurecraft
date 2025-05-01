@@ -1,6 +1,10 @@
 resource "vultr_ssh_key" "default" {
   name    = "current-ssh-key"
   ssh_key = file("~/.ssh/id_rsa.pub")
+
+  lifecycle {
+    ignore_changes = [ssh_key]
+  }
 }
 
 resource "vultr_instance" "current" {
