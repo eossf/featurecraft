@@ -4,11 +4,18 @@ resource "vultr_ssh_key" "default" {
 }
 
 resource "vultr_instance" "current" {
-  region      = "ewr"
-  plan        = "vc2-2c-8gb"
-  os_id       = 215
+  region      = local.default_region
+  plan        = "vc2-4c-8gb"
+  os_id       = 2571
   label       = "current-vm"
   hostname    = "current-host"
   ssh_key_ids = [vultr_ssh_key.default.id]
+  vpc_ids     = [vultr_vpc.default_vpc.id]
+  reserved_ip_id = vultr_reserved_ip.default.id
 }
 
+resource "vultr_reserved_ip" "default" {
+  region = local.default_region
+  ip_type = "v4"
+  label = "default-reserved-ip"
+}
