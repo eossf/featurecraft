@@ -16,7 +16,7 @@ data "template_file" "compose" {
           POSTGRES_USER: "${var.kestra_username}"
           POSTGRES_PASSWORD: "${var.kestra_password}"
         healthcheck:
-          test: ["CMD-SHELL", "pg_isready -d ${var.kestra_username} -U ${var.kestra_username}]
+          test: ["CMD-SHELL", "pg_isready -d ${var.kestra_username} -U ${var.kestra_username}]"]
           interval: 30s
           timeout: 10s
           retries: 10

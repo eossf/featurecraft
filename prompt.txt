@@ -1,0 +1,111 @@
+You are a Terraform expert. Your task is to produce a single Terraform project that deploys a Kestra application in Docker Compose on a single Vultr instance. All provisioning must be done with Terraform (no manual steps), and you must use Ansible via null_resource + remote-exec to install both Ansible itself and Docker on the instance.
+
+Requirements:
+
+1. **Credentials via environment variables**
+   - `VULTR_API_KEY` (for the Vultr provider)
+   - `kestra_username` in `var.kestra_username` (from an environment variable)
+   - `kestra_password` in `var.kestra_password` (from an environment variable)
+
+2. **Vultr resources** (all in the Paris `cdg` region)
+   - A VPC named `"default_vpc"`
+   - A reserved IP named `"default"`
+   - An SSH key named `"default"`
+   - A single instance named `"current"`:
+     - Plan: `vc2-4c-8gb`
+     - OS ID: `2284`
+     - Attach to the VPC, reserved IP, and SSH key for root SSH access
+
+3. **Provisioning on the instance `current`**
+   - Use a `null_resource` with `connection { type = "ssh" host = vultr_instance.current.default_ip_address user = "root" private_key = ... }` to:
+     - **Step 1**: Install Ansible
+     - **Step 2**: Run an Ansible playbook (via another `null_resource`) that installs Docker:
+       ```yaml
+       - hosts: all
+         become: yes
+         tasks:
+           - name: Install Docker
+             ansible.builtin.shell: |
+               curl -fsSL https://get.docker.com | sh
+       ```
+
+4. **Generate a Docker Compose file using Terraform’s `template_file` and `local_file` resources**  
+   Name the template data source `data.template_file.compose`, render it to `docker-compose.yaml` in the module folder, and include:
+
+   ```hcl
+   data "template_file" "compose" {
+     template = <<-EOT
+       volumes:
+         postgres-data:
+           driver: local
+         kestra-data:
+           driver: local
+
+       services:
+         postgres:
+           image: postgres
+           volumes:
+             - postgres-data:/var/lib/postgresql/data
+           environment:
+             POSTGRES_DB: kestra
+             POSTGRES_USER: "${var.kestra_username}"
+             POSTGRES_PASSWORD: "${var.kestra_password}"
+           healthcheck:
+             test: ["CMD-SHELL", "pg_isready -d ${var.kestra_username} -U ${var.kestra_username}"]
+             interval: 30s
+             timeout: 10s
+             retries: 10
+
+         kestra:
+           image: kestra/kestra:latest
+           pull_policy: always
+           user: "root"
+           command: server standalone
+           volumes:
+             - kestra-data:/app/storage
+             - /var/run/docker.sock:/var/run/docker.sock
+             - /tmp/kestra-wd:/tmp/kestra-wd
+           environment:
+             KESTRA_CONFIGURATION: |
+               datasources:
+                 postgres:
+                   url: jdbc:postgresql://postgres:5432/kestra
+                   driverClassName: org.postgresql.Driver
+                   username: "${var.kestra_username}"
+                   password: "${var.kestra_password}"
+               kestra:
+                 server:
+                   basicAuth:
+                     enabled: false
+                     username: "${var.kestra_username}"
+                     password: "${var.kestra_username}"
+                 repository:
+                   type: postgres
+                 storage:
+                   type: local
+                   local:
+                     basePath: "/app/storage"
+                 queue:
+                   type: postgres
+                 tasks:
+                   tmpDir:
+                     path: /tmp/kestra-wd/tmp
+                 url: http://localhost:8080/
+           ports:
+             - "8080:8080"
+             - "8081:8081"
+           depends_on:
+             postgres:
+               condition: service_started
+     EOT
+
+     vars = {
+       kestra_username = var.kestra_username
+       kestra_password = var.kestra_password
+     }
+   }
+
+   resource "local_file" "compose" {
+     content  = data.template_file.compose.rendered
+     filename = "${path.module}/docker-compose.yaml"
+   }

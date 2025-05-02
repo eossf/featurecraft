@@ -1,6 +1,16 @@
 # featurecraft
 
-## Kestra
+Test of Qwen3 LLM reasonning model
+
+## Kestra Installation with terraform
+
+See prompt.txt
+
+It's a docker compose application.
+
+## Run manually Kestra
+
+### Run with docker
 
 ```
 docker run --pull=always --rm -it -p 8080:8080 --user=root \
@@ -11,11 +21,13 @@ docker run --pull=always --rm -it -p 8080:8080 --user=root \
 
 ## MISC
 
+The infrastructure is hosted by Vultr
+
 ### VULTR
 
-[api](https://www.vultr.com/api/)
+[api vultr](https://www.vultr.com/api/)
 
-#### List of xxx
+#### Examples of curl list of items 
 
 ```bash
 curl -k "https://api.vultr.com/v2/regions"   -X GET   -H "Authorization: Bearer ${VULTR_API_KEY}"

@@ -28,16 +28,6 @@ provider "local" {}
 
 provider "null" {}
 
-resource "tls_private_key" "instance_ssh_key" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
-resource "local_file" "instance_ssh_private_key" {
-  content  = tls_private_key.instance_ssh_key.private_key_pem
-  filename = "${path.module}/instance_ssh_key"
-}
-
 resource "vultr_ssh_key" "default" {
   name    = "current-ssh-key"
   ssh_key = file("~/.ssh/id_rsa.pub")
@@ -229,19 +219,3 @@ resource "null_resource" "upload_compose_file" {
   }
 }
 
-resource "null_resource" "start_docker_compose" {
-  depends_on = [null_resource.upload_compose_file]
-
-  connection {
-    type        = "ssh"
-    host        = vultr_instance.current.main_ip
-    user        = "root"
-    private_key = file("~/.ssh/id_rsa")
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "docker compose up -f /root/docker-compose.yaml -d"
-    ]
-  }
-}
