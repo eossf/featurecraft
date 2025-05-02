@@ -1,9 +1,9 @@
 resource "null_resource" "launch_kestra" {
-  depends_on = [null_resource.install_docker_with_ansible, local_file.application_yaml]
+  depends_on = [null_resource.install_docker_with_ansible, local_file.compose]
 
   provisioner "file" {
-    source      = local_file.application_yaml.filename
-    destination = "/root/application.yaml"
+    source      = local_file.compose.filename
+    destination = "/root/docker-compose.yaml"
 
     connection {
       type        = "ssh"
@@ -15,7 +15,7 @@ resource "null_resource" "launch_kestra" {
 
   provisioner "remote-exec" {
     inline = [
-      "docker run --pull=always --rm -d -p 8080:8080 --user=root -v /root/application.yaml:/etc/config/application.yaml -v /var/run/docker.sock:/var/run/docker.sock -v /tmp:/tmp kestra/kestra:latest server standalone --config /etc/config/application.yaml"
+      "docker compose up -d --force-recreate --remove-orphans",
     ]
 
     connection {
