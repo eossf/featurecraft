@@ -18,8 +18,3 @@ resource "vultr_instance" "current" {
   reserved_ip_id = vultr_reserved_ip.default.id
 }
 
-resource "vultr_reserved_ip" "default" {
-  region = local.default_region
-  ip_type = "v4"
-  label = "default-reserved-ip"
-}
