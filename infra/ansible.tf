@@ -17,5 +17,5 @@ resource "null_resource" "install_ansible" {
     ]
   }
 
-    depends_on = [vultr_instance.current]
+  depends_on = [vultr_instance.current]
 }
