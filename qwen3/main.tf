@@ -1,4 +1,12 @@
 # main.tf
+terraform {
+  required_providers {
+    vultr = {
+      source  = "vultr/vultr"
+      version = "2.26.0"
+    }
+  }
+}
 
 variable "vultr_api_key" {
   description = "API key for Vultr provider"
