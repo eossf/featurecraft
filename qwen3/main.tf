@@ -30,13 +30,9 @@ variable "kestra_password" {
   sensitive = true
 }
 
-data "tls_public_key" "ssh" {
-  public_key_pem = file("~/.ssh/id_rsa.pub")
-}
-
-resource "vultr_ssh_key" "current" {
-  name       = "current-ssh-key"
-  ssh_key    = data.tls_public_key.ssh.public_key_openssh
+resource "vultr_ssh_key" "default" {
+  name    = "current-ssh-key"
+  ssh_key = file("~/.ssh/id_rsa.pub")
 
   lifecycle {
     ignore_changes = [ssh_key]
@@ -44,22 +40,25 @@ resource "vultr_ssh_key" "current" {
 }
 
 resource "vultr_vpc" "cdg" {
-  region = "cdg"
-  cidr   = "10.0.0.0/24"
+  description    = "private vpc"
+  region         = "cdg"
+  v4_subnet      = "10.0.0.0"
+  v4_subnet_mask = 24
 }
 
 resource "vultr_reserved_ip" "cdg" {
-  region = "cdg"
+  region  = "cdg"
+  ip_type = "v4"
 }
 
 resource "vultr_instance" "kestra" {
-  region       = "cdg"
-  plan         = "vc2-4c-8gb"
-  os_id        = 2284
-  label        = "current"
-  ssh_keys     = [vultr_ssh_key.current.id]
-  vpc_ids      = [vultr_vpc.cdg.id]
-  reserved_ip_ids = [vultr_reserved_ip.cdg.id]
+  region         = "cdg"
+  plan           = "vc2-4c-8gb"
+  os_id          = 2284
+  label          = "current"
+  ssh_key_ids    = [vultr_ssh_key.default.id]
+  vpc_ids        = [vultr_vpc.cdg.id]
+  reserved_ip_id = vultr_reserved_ip.cdg.id
 }
 
 resource "null_resource" "install_ansible" {
@@ -119,7 +118,7 @@ resource "null_resource" "install_docker_with_ansible" {
   }
 
   provisioner "remote-exec" {
-    command = "ansible-playbook /tmp/install_docker.yaml"
+    inline = [ "ansible-playbook /tmp/install_docker.yaml" ]
   }
 }
 
@@ -170,35 +169,31 @@ resource "local_file" "compose" {
   filename = "docker-compose.yaml"
 }
 
-resource "null_resource" "upload_docker_compose" {
-  depends_on = [local_file.compose]
-
-  connection {
-    type        = "ssh"
-    host        = vultr_instance.kestra.main_ip
-    user        = "root"
-    private_key = file("~/.ssh/id_rsa")
-    timeout     = "5m"
-  }
-
-  provisioner "file" {
-    source      = local_file.compose.filename
-    destination = "/tmp/docker-compose.yaml"
-  }
-}
-
 resource "null_resource" "launch_kestra" {
   depends_on = [null_resource.install_docker_with_ansible, local_file.compose]
 
-  connection {
-    type        = "ssh"
-    host        = vultr_instance.kestra.main_ip
-    user        = "root"
-    private_key = file("~/.ssh/id_rsa")
-    timeout     = "5m"
+  provisioner "file" {
+    source      = local_file.compose.filename
+    destination = "/root/docker-compose.yaml"
+
+    connection {
+      type        = "ssh"
+      host        = vultr_instance.kestra.main_ip
+      user        = "root"
+      private_key = file("~/.ssh/id_rsa")
+    }
   }
 
   provisioner "remote-exec" {
-    command = "cd /tmp && docker compose up -d --force-recreate --remove-orphans"
+    inline = [
+      "docker compose up -d --force-recreate --remove-orphans",
+    ]
+
+    connection {
+      type        = "ssh"
+      host        = vultr_instance.kestra.main_ip
+      user        = "root"
+      private_key = file("~/.ssh/id_rsa")
+    }
   }
 }

@@ -218,25 +218,20 @@ resource "local_file" "compose" {
   filename = "${path.module}/docker-compose.yaml"
 }
 
-resource "null_resource" "upload_compose_file" {
-  depends_on = [local_file.compose]
-
-  connection {
-    type        = "ssh"
-    host        = vultr_instance.current.main_ip
-    user        = "root"
-    private_key = file("~/.ssh/id_rsa")
-  }
+resource "null_resource" "launch_kestra" {
+  depends_on = [null_resource.install_docker_with_ansible, local_file.compose]
 
   provisioner "file" {
     source      = local_file.compose.filename
     destination = "/root/docker-compose.yaml"
-  }
-}
 
-# launch kestra using docker compose
-resource "null_resource" "launch_kestra" {
-  depends_on = [null_resource.install_docker_with_ansible, local_file.compose]
+    connection {
+      type        = "ssh"
+      host        = vultr_instance.current.main_ip
+      user        = "root"
+      private_key = file("~/.ssh/id_rsa")
+    }
+  }
 
   provisioner "remote-exec" {
     inline = [
