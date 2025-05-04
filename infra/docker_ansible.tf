@@ -2,8 +2,8 @@ resource "null_resource" "install_docker_with_ansible" {
   depends_on = [null_resource.install_ansible]
 
   provisioner "file" {
-    source      = "install_docker.yml"
-    destination = "/root/install_docker.yml"
+    source      = "install_docker.yaml"
+    destination = "/root/install_docker.yaml"
 
     connection {
       type        = "ssh"
@@ -15,7 +15,7 @@ resource "null_resource" "install_docker_with_ansible" {
 
   provisioner "remote-exec" {
     inline = [
-      "ansible-playbook -i 'localhost,' -c local /root/install_docker.yml"
+      "ansible-playbook -i 'localhost,' -c local /root/install_docker.yaml"
     ]
 
     connection {

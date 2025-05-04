@@ -59,6 +59,8 @@ resource "vultr_instance" "current" {
   reserved_ip_id = vultr_reserved_ip.default.id
 }
 
+# install ansible using remote-exec provisioner
+#
 resource "null_resource" "install_ansible" {
   connection {
     type        = "ssh"
@@ -78,54 +80,59 @@ resource "null_resource" "install_ansible" {
   }
 }
 
-resource "null_resource" "install_docker_with_ansible" {
-  depends_on = [null_resource.install_ansible]
-
-  provisioner "file" {
-    source      = "install_docker.yml"
-    destination = "/root/install_docker.yml"
-
-    connection {
-      type        = "ssh"
-      host        = vultr_instance.current.main_ip
-      user        = "root"
-      private_key = file("~/.ssh/id_rsa")
-    }
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "ansible-playbook -i 'localhost,' -c local /root/install_docker.yml"
-    ]
-
-    connection {
-      type        = "ssh"
-      host        = vultr_instance.current.main_ip
-      user        = "root"
-      private_key = file("~/.ssh/id_rsa")
-    }
-  }
+# install docker using ansible playbook
+#
+data "template_file" "install_docker" {
+  template = <<-EOT
+- hosts: all
+  become: yes
+  tasks:
+    - name: Install Docker
+      ansible.builtin.shell: |
+        curl -fsSL https://get.docker.com | sh
+EOT
 }
 
-resource "null_resource" "install_docker_compose" {
-  depends_on = [null_resource.install_docker_with_ansible]
+resource "local_file" "install_docker" {
+  content  = data.template_file.install_docker.rendered
+  filename = "${path.module}/install_docker.yaml"
+}
+
+resource "null_resource" "upload_install_docker_file" {
+  depends_on = [local_file.install_docker]
 
   connection {
     type        = "ssh"
     host        = vultr_instance.current.main_ip
     user        = "root"
-        private_key = file("~/.ssh/id_rsa")
+    private_key = file("~/.ssh/id_rsa")
   }
 
-  provisioner "remote-exec" {
-    inline = [
-      "curl -L \"https://github.com/docker/compose/releases/download/v2.23.0/docker-compose-linux-x86_64\" -o /usr/local/bin/docker-compose",
-      "chmod +x /usr/local/bin/docker-compose",
-      "ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose"
-    ]
+  provisioner "file" {
+    source      = local_file.install_docker.filename
+    destination = "/root/install_docker.yaml"
   }
 }
 
+resource "null_resource" "install_docker_with_ansible" {
+  depends_on = [null_resource.install_ansible]
+
+  provisioner "remote-exec" {
+    inline = [
+      "ansible-playbook -i 'localhost,' -c local /root/install_docker.yaml"
+    ]
+
+    connection {
+      type        = "ssh"
+      host        = vultr_instance.current.main_ip
+      user        = "root"
+      private_key = file("~/.ssh/id_rsa")
+    }
+  }
+}
+
+# docker compose file using template_file data source
+# 
 data "template_file" "compose" {
   template = <<-EOT
 volumes:
@@ -218,4 +225,3 @@ resource "null_resource" "upload_compose_file" {
     destination = "/root/docker-compose.yaml"
   }
 }
-
