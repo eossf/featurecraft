@@ -1,0 +1,76 @@
+**Prompt for Generating an Updated Terraform `main.tf` File**
+
+Write a Terraform configuration (`main.tf`) that automates the deployment of a Kestra server on Vultr cloud with the following specifications:
+
+---
+
+### **Providers & Requirements**
+1. **Provider Configuration**:
+   - Use the `vultr` provider (version `2.26.0`) with an API key provided via a variable.
+   - Include the `tls`, `local`, and `null` providers for utility tasks.
+
+2. **Variables**:
+   - `vultr_api_key`: A **sensitive** string for authenticating with Vultr.
+   - `kestra_username`: String with a default value of `"stephane.metairie@gmail.com"`.
+   - `kestra_password`: String with a default value of `"kestra"` (should be treated as sensitive).
+
+---
+
+### **Infrastructure Setup**
+3. **SSH Key & Networking**:
+   - Create a `vultr_ssh_key` resource named `"current-ssh-key"` using the public key from `~/.ssh/id_rsa.pub`. Ignore changes to the `ssh_key` attribute.
+   - Provision a `vultr_vpc` in the `"cdg"` region with subnet `10.0.0.0/24`.
+   - Reserve a public IPv4 address in the `"cdg"` region.
+
+4. **Instance Configuration**:
+   - Deploy a `vultr_instance` in the `"cdg"` region with:
+     - Plan: `"vc2-4c-8gb"`
+     - OS: Ubuntu 22.04 x64 (OS ID `2284`)
+     - Label: `"current"`
+     - Attach the SSH key, VPC, and reserved IP.
+
+---
+
+### **Provisioning**
+5. **Install Ansible**:
+   - Use a `null_resource` with `remote-exec` to install Ansible on the instance via:
+     ```bash
+     apt-get update -y
+     add-apt-repository ppa:ansible/ansible -y
+     apt-get install ansible -y
+     ```
+
+6. **Install Docker with Ansible**:
+   - Generate an Ansible playbook (`install_docker.yaml`) via `template_file` that installs Docker using `curl -fsSL https://get.docker.com | sh`.
+   - Upload the playbook to the instance using a `null_resource` with the `file` provisioner.
+   - Execute the playbook via `ansible-playbook` using a `null_resource`.
+
+---
+
+### **Kestra Deployment**
+7. **Docker Compose Setup**:
+   - Create a `docker-compose.yaml` template using `template_file` with:
+     - A PostgreSQL service storing data in a volume.
+     - A Kestra service using the `kestra/kestra:latest` image, configured to use PostgreSQL for storage and enable basic auth with the provided username/password.
+     - Environment variables and healthchecks for PostgreSQL and Kestra.
+   - Save the rendered template locally as `docker-compose.yaml` using `local_file`.
+
+8. **Upload Docker Compose File**:
+   - Use a `null_resource` to upload the `docker-compose.yaml` to the instance via the `file` provisioner. Ensure this depends on the `local_file.compose` resource.
+
+9. **Launch Kestra with Docker Compose**:
+   - Add a `null_resource` named `launch_kestra` that:
+     - Runs `docker compose up -d --force-recreate --remove-orphans` via `remote-exec` to start services.
+     - Depends on `null_resource.install_docker_with_ansible` and `local_file.compose`.
+
+---
+
+### **Implementation Details**
+- Use SSH connections with the private key `~/.ssh/id_rsa` for all `remote-exec` and `file` provisioners.
+- Set timeouts for SSH connections (e.g., `5m`).
+- Ensure sensitive values (API key, password) are protected in variables.
+- Replicate the exact PostgreSQL and Kestra configurations from the example, including environment variables and volume mappings.
+
+---
+
+**Output**: A single `main.tf` file that fully implements the above architecture. Do not include explanations, only the Terraform code.
