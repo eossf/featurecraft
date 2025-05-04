@@ -31,7 +31,7 @@ variable "kestra_password" {
 }
 
 resource "vultr_ssh_key" "default" {
-  name    = "current-ssh-key"
+  name    = "kestra-ssh-key"
   ssh_key = file("~/.ssh/id_rsa.pub")
 
   lifecycle {
@@ -55,7 +55,7 @@ resource "vultr_instance" "kestra" {
   region         = "cdg"
   plan           = "vc2-4c-8gb"
   os_id          = 2284
-  label          = "current"
+  label          = "kestra"
   ssh_key_ids    = [vultr_ssh_key.default.id]
   vpc_ids        = [vultr_vpc.cdg.id]
   reserved_ip_id = vultr_reserved_ip.cdg.id
@@ -118,7 +118,7 @@ resource "null_resource" "install_docker_with_ansible" {
   }
 
   provisioner "remote-exec" {
-    inline = [ "ansible-playbook /tmp/install_docker.yaml" ]
+    inline = ["ansible-playbook /tmp/install_docker.yaml"]
   }
 }
 
