@@ -1,78 +1,71 @@
-# main.tf
 terraform {
   required_providers {
     vultr = {
       source  = "vultr/vultr"
       version = "2.26.0"
     }
+    tls   = {}
+    local = {}
+    null  = {}
   }
-}
-
-variable "vultr_api_key" {
-  description = "API key for Vultr provider"
-  type        = string
-  sensitive   = true
-}
-
-variable "kestra_username" {
-  type        = string
-  description = "Kestra basic auth username"
-  default     = "stephane.metairie@gmail.com"
-}
-
-variable "kestra_password" {
-  type        = string
-  description = "Kestra basic auth password"
-  default     = "kestra"
 }
 
 provider "vultr" {
   api_key = var.vultr_api_key
 }
 
-provider "tls" {}
+variable "vultr_api_key" {
+  type      = string
+  sensitive = true
+}
 
-provider "local" {}
+variable "kestra_username" {
+  type    = string
+  default = "stephane.metairie@gmail.com"
+}
 
-provider "null" {}
+variable "kestra_password" {
+  type      = string
+  default   = "kestra"
+  sensitive = true
+}
 
-resource "vultr_ssh_key" "default" {
-  name    = "current-ssh-key"
-  ssh_key = file("~/.ssh/id_rsa.pub")
+data "tls_public_key" "ssh" {
+  public_key_pem = file("~/.ssh/id_rsa.pub")
+}
+
+resource "vultr_ssh_key" "current" {
+  name       = "current-ssh-key"
+  ssh_key    = data.tls_public_key.ssh.public_key_openssh
 
   lifecycle {
     ignore_changes = [ssh_key]
   }
 }
 
-resource "vultr_vpc" "default_vpc" {
-  description    = "private vpc"
-  region         = "cdg"
-  v4_subnet      = "10.0.0.0"
-  v4_subnet_mask = 24
+resource "vultr_vpc" "cdg" {
+  region = "cdg"
+  cidr   = "10.0.0.0/24"
 }
 
-resource "vultr_reserved_ip" "default" {
-  region  = "cdg"
-  ip_type = "v4"
+resource "vultr_reserved_ip" "cdg" {
+  region = "cdg"
 }
 
-resource "vultr_instance" "current" {
-  region         = "cdg"
-  plan           = "vc2-4c-8gb"
-  os_id          = 2284 # Ubuntu 22.04 x64
-  label          = "current"
-  ssh_key_ids    = [vultr_ssh_key.default.id]
-  vpc_ids        = [vultr_vpc.default_vpc.id]
-  reserved_ip_id = vultr_reserved_ip.default.id
+resource "vultr_instance" "kestra" {
+  region       = "cdg"
+  plan         = "vc2-4c-8gb"
+  os_id        = 2284
+  label        = "current"
+  ssh_keys     = [vultr_ssh_key.current.id]
+  vpc_ids      = [vultr_vpc.cdg.id]
+  reserved_ip_ids = [vultr_reserved_ip.cdg.id]
 }
 
-# install ansible using remote-exec provisioner
-#
 resource "null_resource" "install_ansible" {
   connection {
     type        = "ssh"
-    host        = vultr_instance.current.main_ip
+    host        = vultr_instance.kestra.main_ip
     user        = "root"
     private_key = file("~/.ssh/id_rsa")
     timeout     = "5m"
@@ -81,173 +74,131 @@ resource "null_resource" "install_ansible" {
   provisioner "remote-exec" {
     inline = [
       "apt-get update -y",
-      "apt-get install -y software-properties-common",
-      "add-apt-repository --yes --update ppa:ansible/ansible",
-      "apt-get install -y ansible"
+      "add-apt-repository ppa:ansible/ansible -y",
+      "apt-get install ansible -y"
     ]
   }
 }
 
-# install docker using ansible playbook
-#
-data "template_file" "install_docker" {
-  template = <<-EOT
-- hosts: all
-  become: yes
+data "template_file" "docker_playbook" {
+  template = <<EOF
+---
+- hosts: localhost
   tasks:
-    - name: Install Docker
-      ansible.builtin.shell: |
-        curl -fsSL https://get.docker.com | sh
-EOT
+  - name: Install Docker
+    shell: curl -fsSL https://get.docker.com | sh
+EOF
 }
 
-resource "local_file" "install_docker" {
-  content  = data.template_file.install_docker.rendered
-  filename = "${path.module}/install_docker.yaml"
-}
-
-resource "null_resource" "upload_install_docker_file" {
-  depends_on = [local_file.install_docker]
+resource "null_resource" "upload_docker_playbook" {
+  depends_on = [null_resource.install_ansible]
 
   connection {
     type        = "ssh"
-    host        = vultr_instance.current.main_ip
+    host        = vultr_instance.kestra.main_ip
     user        = "root"
     private_key = file("~/.ssh/id_rsa")
+    timeout     = "5m"
   }
 
   provisioner "file" {
-    source      = local_file.install_docker.filename
-    destination = "/root/install_docker.yaml"
+    content     = data.template_file.docker_playbook.rendered
+    destination = "/tmp/install_docker.yaml"
   }
 }
 
 resource "null_resource" "install_docker_with_ansible" {
-  depends_on = [null_resource.install_ansible]
+  depends_on = [null_resource.upload_docker_playbook]
+
+  connection {
+    type        = "ssh"
+    host        = vultr_instance.kestra.main_ip
+    user        = "root"
+    private_key = file("~/.ssh/id_rsa")
+    timeout     = "5m"
+  }
 
   provisioner "remote-exec" {
-    inline = [
-      "ansible-playbook -i 'localhost,' -c local /root/install_docker.yaml"
-    ]
-
-    connection {
-      type        = "ssh"
-      host        = vultr_instance.current.main_ip
-      user        = "root"
-      private_key = file("~/.ssh/id_rsa")
-    }
+    command = "ansible-playbook /tmp/install_docker.yaml"
   }
 }
 
-# docker compose file using template_file data source
-# 
-data "template_file" "compose" {
-  template = <<-EOT
-volumes:
-  postgres-data:
-    driver: local
-  kestra-data:
-    driver: local
-
+data "template_file" "docker_compose" {
+  template = <<EOF
+version: '3'
 services:
   postgres:
-    image: postgres
+    image: postgres:15
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: kestra
-      POSTGRES_USER: "${var.kestra_username}"
-      POSTGRES_PASSWORD: "${var.kestra_password}"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d ${var.kestra_username} -U ${var.kestra_username}"]
-      interval: 30s
-      timeout: 10s
-      retries: 10
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   kestra:
     image: kestra/kestra:latest
-    pull_policy: always
-    user: "root"
-    command: server standalone
-    volumes:
-      - kestra-data:/app/storage
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp/kestra-wd:/tmp/kestra-wd
-    environment:
-      KESTRA_CONFIGURATION: |
-        datasources:
-          postgres:
-            url: jdbc:postgresql://postgres:5432/kestra
-            driverClassName: org.postgresql.Driver
-            username: "${var.kestra_username}"
-            password: "${var.kestra_password}"
-        kestra:
-          server:
-            basicAuth:
-              enabled: false
-              username: "${var.kestra_username}"
-              password: "${var.kestra_password}"
-            repository:
-              type: postgres
-            storage:
-              type: local
-              local:
-                basePath: "/app/storage"
-            queue:
-              type: postgres
-            tasks:
-              tmpDir:
-                path: /tmp/kestra-wd/tmp
-            url: http://localhost:8080/
-    ports:
-      - "8080:8080"
-      - "8081:8081"
     depends_on:
       postgres:
-        condition: service_started
-EOT
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      KESTRA_STORAGE_TYPE: postgres
+      KESTRA_STORAGE_POSTGRES_URI: jdbc:postgresql://postgres:5432/postgres
+      KESTRA_STORAGE_POSTGRES_USERNAME: postgres
+      KESTRA_STORAGE_POSTGRES_PASSWORD: postgres
+      KESTRA_SERVER_BASICAUTH_USERNAME: ${var.kestra_username}
+      KESTRA_SERVER_BASICAUTH_PASSWORD: ${var.kestra_password}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
-  vars = {
-    kestra_username = var.kestra_username
-    kestra_password = var.kestra_password
-  }
+volumes:
+  postgres_data:
+EOF
 }
 
 resource "local_file" "compose" {
-  content  = data.template_file.compose.rendered
-  filename = "${path.module}/docker-compose.yaml"
+  content  = data.template_file.docker_compose.rendered
+  filename = "docker-compose.yaml"
 }
 
-resource "null_resource" "upload_compose_file" {
+resource "null_resource" "upload_docker_compose" {
   depends_on = [local_file.compose]
 
   connection {
     type        = "ssh"
-    host        = vultr_instance.current.main_ip
+    host        = vultr_instance.kestra.main_ip
     user        = "root"
     private_key = file("~/.ssh/id_rsa")
+    timeout     = "5m"
   }
 
   provisioner "file" {
     source      = local_file.compose.filename
-    destination = "/root/docker-compose.yaml"
+    destination = "/tmp/docker-compose.yaml"
   }
 }
 
-# launch kestra using docker compose
 resource "null_resource" "launch_kestra" {
   depends_on = [null_resource.install_docker_with_ansible, local_file.compose]
 
-  provisioner "remote-exec" {
-    inline = [
-      "docker compose up -d --force-recreate --remove-orphans",
-    ]
+  connection {
+    type        = "ssh"
+    host        = vultr_instance.kestra.main_ip
+    user        = "root"
+    private_key = file("~/.ssh/id_rsa")
+    timeout     = "5m"
+  }
 
-    connection {
-      type        = "ssh"
-      host        = vultr_instance.current.main_ip
-      user        = "root"
-      private_key = file("~/.ssh/id_rsa")
-    }
+  provisioner "remote-exec" {
+    command = "cd /tmp && docker compose up -d --force-recreate --remove-orphans"
   }
 }
