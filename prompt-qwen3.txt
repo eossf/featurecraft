@@ -74,3 +74,33 @@ Write a Terraform configuration (`main.tf`) that automates the deployment of a K
 ---
 
 **Output**: A single `main.tf` file that fully implements the above architecture. Do not include explanations, only the Terraform code.
+
+**Caution**: on ID accuracy , this is the nodes graph dependencies:
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "data.template_file.application_yaml" [label="data.template_file.application_yaml"];
+  "data.template_file.compose" [label="data.template_file.compose"];
+  "data.vultr_account.current" [label="data.vultr_account.current"];
+  "data.vultr_region.default_region" [label="data.vultr_region.default_region"];
+  "local_file.application_yaml" [label="local_file.application_yaml"];
+  "local_file.compose" [label="local_file.compose"];
+  "null_resource.install_ansible" [label="null_resource.install_ansible"];
+  "null_resource.install_docker_with_ansible" [label="null_resource.install_docker_with_ansible"];
+  "null_resource.launch_kestra" [label="null_resource.launch_kestra"];
+  "vultr_instance.current" [label="vultr_instance.current"];
+  "vultr_reserved_ip.default" [label="vultr_reserved_ip.default"];
+  "vultr_ssh_key.default" [label="vultr_ssh_key.default"];
+  "vultr_vpc.default_vpc" [label="vultr_vpc.default_vpc"];
+  "local_file.application_yaml" -> "data.template_file.application_yaml";
+  "local_file.compose" -> "data.template_file.compose";
+  "null_resource.install_ansible" -> "vultr_instance.current";
+  "null_resource.install_docker_with_ansible" -> "null_resource.install_ansible";
+  "null_resource.launch_kestra" -> "local_file.compose";
+  "null_resource.launch_kestra" -> "null_resource.install_docker_with_ansible";
+  "vultr_instance.current" -> "vultr_reserved_ip.default";
+  "vultr_instance.current" -> "vultr_ssh_key.default";
+  "vultr_instance.current" -> "vultr_vpc.default_vpc";
+  "vultr_reserved_ip.default" -> "data.vultr_region.default_region";
+  "vultr_vpc.default_vpc" -> "data.vultr_region.default_region";
+}
