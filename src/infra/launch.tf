@@ -13,10 +13,9 @@ resource "null_resource" "launch" {
     }
   }
 
-  provisioner "remote-exec" {
-    inline = [
-      "docker compose up -d --force-recreate --remove-orphans",
-    ]
+  provisioner "file" {
+    source      = "./init-data.sh"
+    destination = "/root/docker-compose.yaml"
 
     connection {
       type        = "ssh"
@@ -25,4 +24,17 @@ resource "null_resource" "launch" {
       private_key = file("~/.ssh/id_rsa")
     }
   }
+
+  # provisioner "remote-exec" {
+  #   inline = [
+  #     "docker compose up -d --force-recreate --remove-orphans",
+  #   ]
+
+  #   connection {
+  #     type        = "ssh"
+  #     host        = vultr_instance.current.main_ip
+  #     user        = "root"
+  #     private_key = file("~/.ssh/id_rsa")
+  #   }
+  # }
 }

@@ -35,11 +35,11 @@ data "template_file" "compose" {
         image: postgres:16
         restart: always
         environment:
-          - POSTGRES_USER
-          - POSTGRES_PASSWORD
-          - POSTGRES_DB
-          - POSTGRES_NON_ROOT_USER
-          - POSTGRES_NON_ROOT_PASSWORD
+          - POSTGRES_USER=${var.postgres_user}
+          - POSTGRES_PASSWORD=${var.postgres_password}
+          - POSTGRES_DB=n8n
+          - POSTGRES_NON_ROOT_USER=${var.postgres_non_root_user}
+          - POSTGRES_NON_ROOT_PASSWORD=${var.postgres_non_root_password}
         volumes:
           - db_storage:/var/lib/postgresql/data
           - ./init-data.sh:/docker-entrypoint-initdb.d/init-data.sh

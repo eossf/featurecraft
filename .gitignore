@@ -40,3 +40,11 @@ terraform.d/
 
 # github actions
 actions-runner/
+
+# tls ssl bundle / let's encrypt
+*.pem
+*-ssl-bundle*
+
+# generated files
+*docker-compose.yml
+*docker-compose.yaml
