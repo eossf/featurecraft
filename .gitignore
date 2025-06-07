@@ -44,7 +44,11 @@ actions-runner/
 # tls ssl bundle / let's encrypt
 *.pem
 *-ssl-bundle*
+certs/
 
 # generated files
 *docker-compose.yml
 *docker-compose.yaml
+
+# cache
+.cache
