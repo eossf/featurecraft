@@ -15,7 +15,7 @@ resource "null_resource" "launch" {
 
   provisioner "file" {
     source      = "./init-data.sh"
-    destination = "/root/docker-compose.yaml"
+    destination = "/root/init-data.sh"
 
     connection {
       type        = "ssh"

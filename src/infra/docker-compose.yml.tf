@@ -32,14 +32,14 @@ data "template_file" "compose" {
         - DB_POSTGRESDB_PORT=5432
         - DB_POSTGRESDB_DATABASE=${var.postgres_db}
         - DB_POSTGRESDB_USER=${var.postgres_non_root_user}
-        - DB_POSTGRESDB_PASSWORD=${var.postgres_non_root_password}
+        - DB_POSTGRESDB_PASSWORD="${var.postgres_non_root_password}"
         - EXECUTIONS_MODE=queue
         - QUEUE_BULL_REDIS_HOST=redis
         - QUEUE_HEALTH_CHECK_ACTIVE=true
-        - N8N_ENCRYPTION_KEY=${var.encryption_key}
+        - N8N_ENCRYPTION_KEY="${var.encryption_key}"
         - N8N_BASIC_AUTH_ACTIVE=true
         - N8N_BASIC_AUTH_USER=${var.n8n_user}
-        - N8N_BASIC_AUTH_PASSWORD=${var.n8n_password}
+        - N8N_BASIC_AUTH_PASSWORD="${var.n8n_password}"
       links:
         - postgres
         - redis
@@ -66,10 +66,10 @@ data "template_file" "compose" {
         restart: always
         environment:
           - POSTGRES_USER=${var.postgres_user}
-          - POSTGRES_PASSWORD=${var.postgres_password}
+          - POSTGRES_PASSWORD="${var.postgres_password}"
           - POSTGRES_DB=n8n
           - POSTGRES_NON_ROOT_USER=${var.postgres_non_root_user}
-          - POSTGRES_NON_ROOT_PASSWORD=${var.postgres_non_root_password}
+          - POSTGRES_NON_ROOT_PASSWORD="${var.postgres_non_root_password}"
         volumes:
           - db_storage:/var/lib/postgresql/data
           - ./init-data.sh:/docker-entrypoint-initdb.d/init-data.sh
