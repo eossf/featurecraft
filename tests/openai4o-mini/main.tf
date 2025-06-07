@@ -43,8 +43,8 @@ data "vultr_region" "default_region" {
 }
 
 resource "vultr_ssh_key" "default" {
-  name       = "current-ssh-key"
-  ssh_key    = file("~/.ssh/id_rsa.pub")
+  name    = "current-ssh-key"
+  ssh_key = file("~/.ssh/id_rsa.pub")
   lifecycle {
     ignore_changes = [ssh_key]
   }
@@ -62,11 +62,11 @@ resource "vultr_reserved_ip" "default" {
 }
 
 resource "vultr_instance" "current" {
-  label         = "current"
-  plan          = "vc2-4c-8gb"
-  os_id         = 2284
-  region        = data.vultr_region.default_region.id
-  ipv4_address  = vultr_reserved_ip.default.ip_address
+  label          = "current"
+  plan           = "vc2-4c-8gb"
+  os_id          = 2284
+  region         = data.vultr_region.default_region.id
+  ipv4_address   = vultr_reserved_ip.default.ip_address
   vpc_network_id = vultr_vpc.default_vpc.id
   ssh_key_ids    = [vultr_ssh_key.default.id]
 }

@@ -5,27 +5,27 @@ variable "vultr_api_key" {
 }
 
 variable "postgres_non_root_user" {
-  type        = string
-  default     = "me"
+  type    = string
+  default = "me"
 }
 
 variable "postgres_non_root_password" {
-  type        = string
-  default     = "mypassword"
+  type    = string
+  default = "mypassword"
 }
 
 variable "encryption_key" {
-  type        = string
-  default     = "123345678901234567890123456789012"
-  sensitive   = true
+  type      = string
+  default   = "123345678901234567890123456789012"
+  sensitive = true
 }
 
 variable "postgres_user" {
-  type        = string
-  default     = "user"
+  type    = string
+  default = "user"
 }
 
 variable "postgres_db" {
-  type        = string
-  default     = "db"
+  type    = string
+  default = "db"
 }
