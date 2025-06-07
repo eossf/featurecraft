@@ -37,3 +37,6 @@ override.tf
 override.tf.json
 terraform.rc
 terraform.d/
+
+# github actions
+actions-runner/
