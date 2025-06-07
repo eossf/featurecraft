@@ -95,13 +95,13 @@ data "template_file" "compose" {
     postgres_non_root_user     = var.postgres_non_root_user
     postgres_non_root_password = var.postgres_non_root_password
     # The encryption key used by n8n for encrypting sensitive data
-    encryption_key             = var.encryption_key
-    postgres_user              = var.postgres_user
-    domain                     = var.domain
-    n8n_user                   = var.n8n_user
-    n8n_password               = var.n8n_password
-    postgres_password          = var.postgres_password
-    n8n_password               = var.n8n_password
+    encryption_key    = var.encryption_key
+    postgres_user     = var.postgres_user
+    domain            = var.domain
+    n8n_user          = var.n8n_user
+    n8n_password      = var.n8n_password
+    postgres_password = var.postgres_password
+    n8n_password      = var.n8n_password
   }
 }
 

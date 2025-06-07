@@ -5,11 +5,11 @@ variable "vultr_api_key" {
 }
 
 variable "postgres_non_root_user" {
-  type    = string
+  type = string
 }
 
 variable "postgres_non_root_password" {
-  type    = string
+  type = string
 }
 
 variable "encryption_key" {
@@ -18,11 +18,11 @@ variable "encryption_key" {
 }
 
 variable "postgres_user" {
-  type    = string
+  type = string
 }
 
 variable "postgres_db" {
-  type    = string
+  type = string
 }
 
 variable "postgres_password" {
@@ -35,7 +35,7 @@ variable "n8n_user" {
 }
 
 variable "n8n_password" {
-  type = string
+  type      = string
   sensitive = true
 }
 
