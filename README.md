@@ -24,6 +24,18 @@ Run as local administrator, INSTALL AS SERVICE when prompt, put your own RUNNER_
     ./run.cmd
 ```
 
+#### Run locally in gitbash
+
+```bash
+cd src/infra
+source ./export_TF_VARS.sh
+terraform fmt -recursive
+terraform validate
+terraform init
+terraform plan
+terraform apply 
+```
+
 ## BUILD platform
 
 

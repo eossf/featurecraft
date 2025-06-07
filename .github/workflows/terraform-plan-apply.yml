@@ -1,0 +1,40 @@
+name: Terraform Plan Apply
+
+on:
+  push:
+    paths:
+      - 'src/infra/**/*.tf'
+      - '.github/workflows/terraform-plan-apply.yml'
+  workflow_dispatch:
+
+jobs:
+  terraform-plan-apply:
+    runs-on: ubuntu-latest
+    environment: dev
+    env:
+      TF_VAR_postgres_db: n8n
+      TF_VAR_postgres_non_root_user: featurecraft
+      TF_VAR_postgres_user: featurecraft
+      TF_VAR_encryption_key: ${{ secrets.ENCRYPTION_KEY }}
+      TF_VAR_postgres_non_root_password: ${{ secrets.POSTGRES_NON_ROOT_PASSWORD }}
+      TF_VAR_postgres_password: ${{ secrets.POSTGRES_PASSWORD }}
+      TF_VAR_vultr_api_key: ${{ secrets.VULTR_API_KEY }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init
+        working-directory: src/infra
+        run: terraform init
+
+      - name: Terraform plan
+        working-directory: src/infra
+        run: terraform plan
+
+      - name: Terraform apply
+        if: github.event_name == 'workflow_dispatch'
+        working-directory: src/infra
+        run: terraform apply -auto-approve
