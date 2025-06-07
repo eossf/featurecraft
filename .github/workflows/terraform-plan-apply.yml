@@ -5,10 +5,33 @@ on:
     paths:
       - 'src/infra/**/*.tf'
       - '.github/workflows/terraform-plan-apply.yml'
+  pull_request:
+    paths:
+      - 'src/infra/**/*.tf'
+      - '.github/workflows/terraform-plan-apply.yml'
   workflow_dispatch:
 
 jobs:
+  terraform-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform fmt check
+        working-directory: src/infra
+        run: terraform fmt -check -recursive
+
+      - name: Terraform validate
+        working-directory: src/infra
+        run: terraform validate
+
   terraform-plan-apply:
+    needs: terraform-lint
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment: dev
     env:
