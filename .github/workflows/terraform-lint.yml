@@ -1,0 +1,24 @@
+name: Terraform Lint
+
+on:
+  push:
+    paths:
+      - '**.tf'
+      - '.github/workflows/terraform-lint.yml'
+
+jobs:
+  terraform-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform fmt check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform validate
+        run: terraform validate

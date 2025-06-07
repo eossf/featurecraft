@@ -1,0 +1,1 @@
+data "vultr_account" "current" {}
