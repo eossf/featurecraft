@@ -5,62 +5,52 @@ data "template_file" "compose" {
       n8n_storage:
       redis_storage:
 
-    traefik:
-      image: traefik:latest
-        - "--api.insecure=true"
-        - "--providers.docker=true"
-        - "--entrypoints.web.address=:80"
-        - "--entrypoints.websecure.address=:443"
-        - "--entrypoints.websecure.http.tls=true"
-        - "--entrypoints.websecure.http.tls.domains[0].main=${var.domain}"
-        - "--entrypoints.websecure.http.tls.certificates[0].certFile=/certs/domain.cert.pem"
-        - "--entrypoints.websecure.http.tls.certificates[0].keyFile=/certs/private.key.pem"
-      ports:
-        - "80:80"
-        - "443:443"
-      volumes:
-        - "/var/run/docker.sock:/var/run/docker.sock:ro"
-        - "./certs:/certs"
-      restart: unless-stopped
-      
-    n8n:
-      restart: always
-      image: docker.n8n.io/n8nio/n8n
-      environment:
-        - DB_TYPE=postgresdb
-        - DB_POSTGRESDB_HOST=postgres
-        - DB_POSTGRESDB_PORT=5432
-        - DB_POSTGRESDB_DATABASE=${var.postgres_db}
-        - DB_POSTGRESDB_USER=${var.postgres_non_root_user}
-        - DB_POSTGRESDB_PASSWORD="${var.postgres_non_root_password}"
-        - EXECUTIONS_MODE=queue
-        - QUEUE_BULL_REDIS_HOST=redis
-        - QUEUE_HEALTH_CHECK_ACTIVE=true
-        - N8N_ENCRYPTION_KEY="${var.encryption_key}"
-        - N8N_BASIC_AUTH_ACTIVE=true
-        - N8N_BASIC_AUTH_USER=${var.n8n_user}
-        - N8N_BASIC_AUTH_PASSWORD="${var.n8n_password}"
-      links:
-        - postgres
-        - redis
-      volumes:
-        - n8n_storage:/home/node/.n8n
-      ports:
-        - 5678:5678
-      labels:
-        - traefik.enable=true
-        - traefik.http.routers.n8n.rule=Host("${var.domain}")
-        - traefik.http.routers.n8n.entrypoints=websecure
-        - traefik.http.services.n8n.loadbalancer.server.port=5678
-      depends_on:
-        traefik:
-          condition: service_healthy
-        redis:
-          condition: service_healthy
-        postgres:
-          condition: service_healthy
-
     services:
+      nginx:
+        image: nginx:alpine
+        container_name: nginx
+        ports:
+          - "443:443"
+        volumes:
+          - ./nginx.conf:/etc/nginx/nginx.conf:ro
+          - ./domain.cert.pem:/etc/ssl/certs/domain.cert.pem:ro
+          - ./private.key.pem:/etc/ssl/private/private.key.pem:ro
+        depends_on:
+          - n8n
+        restart: unless-stopped
+        
+      n8n:
+        restart: always
+        image: docker.n8n.io/n8nio/n8n
+        environment:
+          - DB_TYPE=postgresdb
+          - DB_POSTGRESDB_HOST=postgres
+          - DB_POSTGRESDB_PORT=5432
+          - DB_POSTGRESDB_DATABASE=${var.postgres_db}
+          - DB_POSTGRESDB_USER=${var.postgres_non_root_user}
+          - DB_POSTGRESDB_PASSWORD="${var.postgres_non_root_password}"
+          - EXECUTIONS_MODE=queue
+          - QUEUE_BULL_REDIS_HOST=redis
+          - QUEUE_HEALTH_CHECK_ACTIVE=true
+          - N8N_ENCRYPTION_KEY="${var.encryption_key}"
+          - N8N_BASIC_AUTH_ACTIVE=true
+          - N8N_BASIC_AUTH_USER=${var.n8n_user}
+          - N8N_BASIC_AUTH_PASSWORD="${var.n8n_password}"
+        links:
+          - postgres
+          - redis
+        volumes:
+          - n8n_storage:/home/node/.n8n
+        ports:
+          - 5678:5678
+        depends_on:
+          # traefik:
+          #   condition: service_healthy
+          redis:
+            condition: service_healthy
+          postgres:
+            condition: service_healthy
+
       postgres:
         image: postgres:16
         restart: always
