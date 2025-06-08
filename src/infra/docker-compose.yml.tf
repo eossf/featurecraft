@@ -97,14 +97,14 @@ data "template_file" "compose" {
   EOT
 
   vars = {
-    encryption_key            = var.encryption_key
-    n8n_password              = var.n8n_password
-    n8n_user                  = var.n8n_user
-    postgres_db               = var.postgres_db
+    encryption_key             = var.encryption_key
+    n8n_password               = var.n8n_password
+    n8n_user                   = var.n8n_user
+    postgres_db                = var.postgres_db
     postgres_non_root_password = var.postgres_non_root_password
-    postgres_non_root_user    = var.postgres_non_root_user
-    postgres_password         = var.postgres_password
-    postgres_user             = var.postgres_user
+    postgres_non_root_user     = var.postgres_non_root_user
+    postgres_password          = var.postgres_password
+    postgres_user              = var.postgres_user
   }
 }
 
