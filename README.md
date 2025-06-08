@@ -1,6 +1,23 @@
 # Feature Craft
 
-## Installation platforl
+## Installation platform
+
+### Domain and certificate
+
+I have my own domain (metairie.dev) and a Lets Encrypt certificate bundle for https
+
+To import certificate, conversion for windows
+
+```bash
+openssl pkcs12 -export \
+  -out domain.pfx \
+  -inkey private.key.pem \
+  -in domain.cert.pem
+```
+
+### DNS
+
+My registrar manager, allows me to add A record for my IP address. Also https://metairie.dev/ goes to this setup by default
 
 ### Start from Windows PC (gitbash and powershell)
 
