@@ -7,6 +7,10 @@ while IFS='=' read -r key value; do
   # Remove possible carriage return and whitespace
   key=$(echo "$key" | tr -d '\r' | xargs | tr '[:upper:]' '[:lower:]')
   value=$(echo "$value" | tr -d '\r' | xargs)
-  echo "TF_VAR_$key=$value"
+  if [[ "$key" =~ pass|password|key|token ]]; then
+    echo "$key=$(echo "${value:0:3}******")"
+  else
+    echo "$key=$value"
+  fi
   export TF_VAR_"$key"="$value"
 done < .env
