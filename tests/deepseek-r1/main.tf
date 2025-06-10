@@ -52,16 +52,16 @@ resource "vultr_vpc" "default_vpc" {
 }
 
 resource "vultr_reserved_ip" "default" {
-  region = data.vultr_region.default_region.id
+  region  = data.vultr_region.default_region.id
   ip_type = "v4"
 }
 
 resource "vultr_instance" "current" {
-  region           = data.vultr_region.default_region.id
-  plan             = "vc2-4c-8gb"
-  os_id            = 2284
-  label            = "current"
-  ssh_key_ids      = [vultr_ssh_key.default.id]
+  region         = data.vultr_region.default_region.id
+  plan           = "vc2-4c-8gb"
+  os_id          = 2284
+  label          = "current"
+  ssh_key_ids    = [vultr_ssh_key.default.id]
   vpc_ids        = [vultr_vpc.default_vpc.id]
   reserved_ip_id = vultr_reserved_ip.default.id
 }
