@@ -39,3 +39,26 @@ variable "vultr_api_key" {
   type        = string
   sensitive   = true
 }
+
+variable "porkbun_api_key" {
+  description = "API key for Porkbun provider"
+  type        = string
+  sensitive   = true
+}
+
+variable "porkbun_secret_api_key" {
+  description = "Secret API key for Porkbun provider"
+  type        = string
+  sensitive   = true
+}
+
+variable "domain" {
+  description = "Domain name for the application"
+  type        = string
+}
+
+variable "n8n_api_key" {
+  description = "API key for n8n instance"
+  type        = string
+  sensitive   = true
+}

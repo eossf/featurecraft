@@ -22,6 +22,8 @@ data "template_file" "compose" {
         - N8N_BASIC_AUTH_ACTIVE=true
         - N8N_BASIC_AUTH_USER=${var.n8n_user}
         - N8N_BASIC_AUTH_PASSWORD="${var.n8n_password}"
+        - N8N_API_KEY="${var.n8n_api_key}"
+        - N8N_GENERIC_AUTH_ENABLED=true
       links:
         - postgres
         - redis
