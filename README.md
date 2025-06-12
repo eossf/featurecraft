@@ -45,13 +45,16 @@ Run as local administrator, INSTALL AS SERVICE when prompt, put your own RUNNER_
 
 ```bash
 cd src/infra
-source .env
 source ./export_TF_VARS.sh
 terraform fmt -recursive
-terraform validate
 terraform init
+terraform validate
 terraform plan
-terraform apply 
+terraform apply
+
+# remove compose file generation 
+terraform destroy -target null_resource.launch
+terraform destroy -target local_file.compose
 ```
 
 ## BUILD platform
@@ -68,3 +71,14 @@ terraform apply
  - data helm ok
  - pdf version 
 
+
+## API
+
+```bash
+curl -k -X "GET" "https://$TF_VAR_domain/api/v1/workflows?active=true" \
+  -H "accept: application/json" \
+  -H "'X-N8N-API-KEY: $TF_VAR_n8n_api_key'"
+
+curl -k -X "GET" "https://$TF_VAR_domain/api/v1/workflows?active=true" \
+  -H "accept: application/json" -H "'Authorization: Bearer $TF_VAR_n8n_api_key'" -H "'X-N8N-API-KEY: $TF_VAR_n8n_api_key'"
+```

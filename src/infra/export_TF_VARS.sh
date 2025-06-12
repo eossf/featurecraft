@@ -1,5 +1,6 @@
 #!/bin/bash
 
+source .env
 # Iterate over each non-empty, non-comment line in .env and export as TF_VAR_<key>
 while IFS='=' read -r key value; do
   # Skip empty lines and lines starting with #
