@@ -1,4 +1,4 @@
-variable "encryption_key" {
+variable "n8n_encryption_key" {
   description = "The encryption key used by n8n for encrypting sensitive data"
   type        = string
   sensitive   = true
@@ -52,7 +52,7 @@ variable "porkbun_secret_api_key" {
   sensitive   = true
 }
 
-variable "domain" {
+variable "porkbun_domain" {
   description = "Domain name for the application"
   type        = string
 }
@@ -61,4 +61,9 @@ variable "n8n_api_key" {
   description = "API key for n8n instance"
   type        = string
   sensitive   = true
+}
+
+variable "n8n_basic_auth_user" {
+  description = "Basic auth username for n8n instance"
+  type        = string
 }

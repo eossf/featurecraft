@@ -1,7 +1,7 @@
 resource "porkbun_dns_record" "n8n_a_record" {
   # This resource creates an A record for the n8n instance on Porkbun
   type   = "A"
-  domain = "metairie.dev"
+  domain = var.porkbun_domain
 
   content = vultr_instance.current.main_ip
   ttl     = "600"
