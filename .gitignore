@@ -55,3 +55,6 @@ certs/
 
 # n8n
 .n8n/
+
+# data
+data/*.pdf
