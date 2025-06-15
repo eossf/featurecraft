@@ -82,3 +82,37 @@ curl -k -X "GET" "https://$TF_VAR_domain/api/v1/workflows?active=true" \
 curl -k -X "GET" "https://$TF_VAR_domain/api/v1/workflows?active=true" \
   -H "accept: application/json" -H "'Authorization: Bearer $TF_VAR_n8n_api_key'" -H "'X-N8N-API-KEY: $TF_VAR_n8n_api_key'"
 ```
+
+### Run plateform in Docker
+
+```bash
+docker run -it --rm --name n8n -p 5678:5678 \
+  -v n8n_data:/home/node/.n8n \
+  -e N8N_RUNNERS_ENABLED=true \
+  -e N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true \
+  docker.n8n.io/n8nio/n8n
+```
+
+docker run -it --rm --name n8n -p 5678:5678 \
+  -v n8n_data:/home/node/.n8n \
+  -e N8N_RUNNERS_ENABLED=true \
+  -e N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true \
+  -e N8N_HOST=metairie.dev \
+  -e N8N_PORT=5678 \
+  -e N8N_PROTOCOL=https \
+  -e NODE_ENV=production \
+  -e WEBHOOK_URL=https://metairie.dev/ \
+  -e GENERIC_TIMEZONE="Europe/Paris" \
+  -e OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS=true  docker.n8n.io/n8nio/n8n
+
+  -e N8N_ENCRYPTION_KEY="Q2FzZV9zZW5zaXRpdmVfZW5jcnlwdGlvbl9rZXlfZXhhbXBsZQ==" \
+  -e N8N_API_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YTgyMzU0MC1mNjc1LTQ4ZDEtYTliYy01ZmM4NWM5ZmY3ZDciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzQ5NjY2NTI4fQ.p_m3ZzYXlLbYNjgc6dTqXMfqsM7YJVibDSRffcTz1cI" \
+  -e DB_TYPE=postgresdb \
+  -e DB_POSTGRESDB_HOST=postgres \
+  -e DB_POSTGRESDB_PORT=5432 \
+  -e DB_POSTGRESDB_DATABASE=n8n \
+  -e DB_POSTGRESDB_USER=featurecraft \
+  -e DB_POSTGRESDB_PASSWORD="yT7!pQ2wZx9@Lm4s" \
+  -e EXECUTIONS_MODE=queue \
+  -e QUEUE_BULL_REDIS_HOST=redis \
+  -e QUEUE_HEALTH_CHECK_ACTIVE=true \

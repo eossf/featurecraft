@@ -19,27 +19,24 @@ data "template_file" "compose" {
         - QUEUE_BULL_REDIS_HOST=redis
         - QUEUE_HEALTH_CHECK_ACTIVE=true
         - N8N_ENCRYPTION_KEY="${var.n8n_encryption_key}"
-        - N8N_BASIC_AUTH_ACTIVE=true
-        - N8N_BASIC_AUTH_USER=${var.n8n_basic_auth_user}
-        - N8N_BASIC_AUTH_PASSWORD="${var.n8n_password}"
+        # - N8N_BASIC_AUTH_ACTIVE=false
+        # - N8N_BASIC_AUTH_USER=${var.n8n_basic_auth_user}
+        # - N8N_BASIC_AUTH_PASSWORD="${var.n8n_password}"
         - N8N_API_KEY="${var.n8n_api_key}"
         - N8N_GENERIC_AUTH_ENABLED=true
         - N8N_RUNNERS_ENABLED=true
+        - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+        - OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS=true
+        - N8N_SECURE_COOKIE=false
       links:
         - postgres
         - redis
-      volumes:
-        - n8n_storage:/home/node/.n8n
       depends_on:
         redis:
           condition: service_healthy
         postgres:
           condition: service_healthy
-      healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:5678/healthz"]
-        interval: 10s
-        timeout: 5s
-        retries: 5
+
 
     services:       
       postgres:
@@ -75,30 +72,44 @@ data "template_file" "compose" {
         <<: *shared
         ports:
           - 5678:5678
+        volumes:
+          - n8n_storage:/home/node/.n8n 
+          - /var/run/docker.sock:/var/run/docker.sock
+        healthcheck:
+          test: ["CMD", "curl", "-f", "http://localhost:5678/healthz"]
+          interval: 10s
+          timeout: 5s
+          retries: 5
 
       n8n-worker:
         <<: *shared
+        ports:
+          - 5679:5679
+        volumes:
+          - n8n_storage:/home/node/.n8n
         command: worker
         depends_on:
           - n8n
         
-      nginx:
-        image: nginx:alpine
-        container_name: nginx
-        ports:
-          - "443:443"
-        volumes:
-          - ./nginx.conf:/etc/nginx/nginx.conf:ro
-          - ./domain.cert.pem:/etc/ssl/certs/domain.cert.pem:ro
-          - ./private.key.pem:/etc/ssl/private/private.key.pem:ro
-        restart: unless-stopped
+      # nginx:
+      #   image: nginx:alpine
+      #   container_name: nginx
+      #   ports:
+      #     - "443:443"
+      #   volumes:
+      #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      #     - ./domain.cert.pem:/etc/ssl/certs/domain.cert.pem:ro
+      #     - ./private.key.pem:/etc/ssl/private/private.key.pem:ro
+      #   restart: unless-stopped
 
   EOT
 
   vars = {
+    n8n_basic_auth_user        = var.n8n_basic_auth_user
     encryption_key             = var.n8n_encryption_key
     n8n_password               = var.n8n_password
     n8n_user                   = var.n8n_user
+    pinecone_api_key          = var.pinecone_api_key
     postgres_db                = var.postgres_db
     postgres_non_root_password = var.postgres_non_root_password
     postgres_non_root_user     = var.postgres_non_root_user

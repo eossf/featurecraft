@@ -52,3 +52,6 @@ certs/
 
 # cache
 .cache
+
+# n8n
+.n8n/

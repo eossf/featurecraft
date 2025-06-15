@@ -1,3 +1,14 @@
+variable "n8n_api_key" {
+  description = "API key for n8n instance"
+  type        = string
+  sensitive   = true
+}
+
+variable "n8n_basic_auth_user" {
+  description = "Basic auth username for n8n instance"
+  type        = string
+}
+
 variable "n8n_encryption_key" {
   description = "The encryption key used by n8n for encrypting sensitive data"
   type        = string
@@ -34,8 +45,8 @@ variable "postgres_user" {
   type = string
 }
 
-variable "vultr_api_key" {
-  description = "API key for Vultr provider"
+variable "pinecone_api_key" {
+  description = "API key for Pinecone provider"
   type        = string
   sensitive   = true
 }
@@ -57,13 +68,8 @@ variable "porkbun_domain" {
   type        = string
 }
 
-variable "n8n_api_key" {
-  description = "API key for n8n instance"
+variable "vultr_api_key" {
+  description = "API key for Vultr provider"
   type        = string
   sensitive   = true
-}
-
-variable "n8n_basic_auth_user" {
-  description = "Basic auth username for n8n instance"
-  type        = string
 }
