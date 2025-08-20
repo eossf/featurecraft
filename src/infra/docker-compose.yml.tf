@@ -18,7 +18,7 @@ data "template_file" "compose" {
         - EXECUTIONS_MODE=queue
         - QUEUE_BULL_REDIS_HOST=redis
         - QUEUE_HEALTH_CHECK_ACTIVE=true
-        - N8N_ENCRYPTION_KEY="${var.encryption_key}"
+        - N8N_ENCRYPTION_KEY="${var.n8n_encryption_key}"
         - N8N_BASIC_AUTH_ACTIVE=true
         - N8N_BASIC_AUTH_USER=${var.n8n_user}
         - N8N_BASIC_AUTH_PASSWORD="${var.n8n_password}"
@@ -95,7 +95,7 @@ data "template_file" "compose" {
   EOT
 
   vars = {
-    encryption_key             = var.encryption_key
+    encryption_key             = var.n8n_encryption_key
     n8n_password               = var.n8n_password
     n8n_user                   = var.n8n_user
     postgres_db                = var.postgres_db
