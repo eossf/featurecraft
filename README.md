@@ -44,6 +44,9 @@ Run as local administrator, INSTALL AS SERVICE when prompt, put your own RUNNER_
 #### Run locally in gitbash
 
 ```bash
+git config --global user.email "stephane.metairie@gmail.com"
+git config --global user.name "Stephane Metairie"
+
 cd src/infra
 source ./export_TF_VARS.sh
 terraform fmt -recursive
