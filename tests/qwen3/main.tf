@@ -66,7 +66,7 @@ resource "null_resource" "install_ansible" {
     type        = "ssh"
     host        = vultr_instance.kestra.main_ip
     user        = "root"
-    private_key = file("~/.ssh/id_rsa")
+    private_key = file("/root/.ssh/id_rsa")
     timeout     = "5m"
   }
 
@@ -96,7 +96,7 @@ resource "null_resource" "upload_docker_playbook" {
     type        = "ssh"
     host        = vultr_instance.kestra.main_ip
     user        = "root"
-    private_key = file("~/.ssh/id_rsa")
+    private_key = file("/root/.ssh/id_rsa")
     timeout     = "5m"
   }
 
@@ -113,7 +113,7 @@ resource "null_resource" "install_docker_with_ansible" {
     type        = "ssh"
     host        = vultr_instance.kestra.main_ip
     user        = "root"
-    private_key = file("~/.ssh/id_rsa")
+    private_key = file("/root/.ssh/id_rsa")
     timeout     = "5m"
   }
 
@@ -180,7 +180,7 @@ resource "null_resource" "launch_kestra" {
       type        = "ssh"
       host        = vultr_instance.kestra.main_ip
       user        = "root"
-      private_key = file("~/.ssh/id_rsa")
+      private_key = file("/root/.ssh/id_rsa")
     }
   }
 
@@ -193,7 +193,7 @@ resource "null_resource" "launch_kestra" {
       type        = "ssh"
       host        = vultr_instance.kestra.main_ip
       user        = "root"
-      private_key = file("~/.ssh/id_rsa")
+      private_key = file("/root/.ssh/id_rsa")
     }
   }
 }

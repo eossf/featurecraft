@@ -1,28 +1,50 @@
 # Feature Craft
 
-## Installation platform
+Takes all tickets in a Kubernetes Project, assigned to the BOT, and code the fix.
 
-### Domain and certificate
+The Kubernetes Project hosts a CICD pipeline. Each time a ticket is fixed (Pull Request / Merge Request) a whole redeploy is performed, a pipeline with tests is played.
+
+It's possible to reset Kubernetes Project, and redo the fix at any time, according to a new version of Featurecraft Platform or any change of LLM.
+
+A report with benchmark is written for every run.
+
+## Design
+
+Multi layers Bot. The update for a ticket could target one of these layers.
+
+- specifications
+- code infra
+- code app
+- configuration
+
+The bot should be onboard the first time it is launched, for discovering:
+- code repository
+- documentation project, specificities
+- versions of components and dependancies
+- general behaviour (conservative/... configuration files not managed by IA, ...)
+
+## 1/ Install platform
+### 1a/ Pre-requisites
+#### Domain and certificate
 
 I have my own domain (metairie.dev) and a Lets Encrypt certificate bundle for https
 
-To import certificate, conversion for windows
+To import certificate, let's do a conversion for windows user (.pfx)
 
 ```bash
+# for windows only
 openssl pkcs12 -export \
   -out domain.pfx \
   -inkey private.key.pem \
   -in domain.cert.pem
 ```
 
-### DNS
+#### DNS
 
 My registrar manager, allows me to add A record for my IP address. Also https://metairie.dev/ goes to this setup by default
 
-### Start from Windows PC (gitbash and powershell)
-
-#### Github runner locally installed version 2.325
-
+### 1b/ CI - Github runner
+#### Locally installed version 2.325 - Windows
 Run as local administrator, INSTALL AS SERVICE when prompt, put your own RUNNER_TOKEN
 
 ```powershell
@@ -41,7 +63,7 @@ Run as local administrator, INSTALL AS SERVICE when prompt, put your own RUNNER_
     ./run.cmd
 ```
 
-#### Run locally in gitbash
+### 1c/ Run locally in bash (.devcontainer) or gitbash
 
 ```bash
 git config --global user.email "stephane.metairie@gmail.com"
@@ -60,22 +82,15 @@ terraform destroy -target null_resource.launch
 terraform destroy -target local_file.compose
 ```
 
-## BUILD platform
-
-
-
-## RUN platform
-
-
-
+## 2/ RUN the platform
 ### Test Demo 
-
 #### kubernetes
  - data helm ok
  - pdf version 
 
 
 ## API
+
 
 ```bash
 curl -k -X "GET" "https://$TF_VAR_domain/api/v1/workflows?active=true" \
@@ -85,3 +100,7 @@ curl -k -X "GET" "https://$TF_VAR_domain/api/v1/workflows?active=true" \
 curl -k -X "GET" "https://$TF_VAR_domain/api/v1/workflows?active=true" \
   -H "accept: application/json" -H "'Authorization: Bearer $TF_VAR_n8n_api_key'" -H "'X-N8N-API-KEY: $TF_VAR_n8n_api_key'"
 ```
+
+
+## TODO
+replace private_key = file("/home/.ssh/id_rsa") => ${HOME}

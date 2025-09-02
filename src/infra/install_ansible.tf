@@ -5,7 +5,7 @@ resource "null_resource" "install_ansible" {
     type        = "ssh"
     host        = vultr_instance.current.main_ip
     user        = "root"
-    private_key = file("~/.ssh/id_rsa")
+    private_key = file("/root/.ssh/id_rsa")
   }
 
   provisioner "remote-exec" {

@@ -8,7 +8,7 @@ resource "null_resource" "launch" {
       type        = "ssh"
       host        = vultr_instance.current.main_ip
       user        = "root"
-      private_key = file("~/.ssh/id_rsa")
+      private_key = file("/root/.ssh/id_rsa")
     }
   }
 
@@ -19,7 +19,7 @@ resource "null_resource" "launch" {
       type        = "ssh"
       host        = vultr_instance.current.main_ip
       user        = "root"
-      private_key = file("~/.ssh/id_rsa")
+      private_key = file("/root/.ssh/id_rsa")
     }
   }
 
@@ -30,7 +30,7 @@ resource "null_resource" "launch" {
       type        = "ssh"
       host        = vultr_instance.current.main_ip
       user        = "root"
-      private_key = file("~/.ssh/id_rsa")
+      private_key = file("/root/.ssh/id_rsa")
     }
   }
 }
@@ -48,7 +48,7 @@ resource "null_resource" "push_tls_certs" {
       type        = "ssh"
       host        = vultr_instance.current.main_ip
       user        = "root"
-      private_key = file("~/.ssh/id_rsa")
+      private_key = file("/root/.ssh/id_rsa")
     }
   }
 
@@ -59,7 +59,7 @@ resource "null_resource" "push_tls_certs" {
       type        = "ssh"
       host        = vultr_instance.current.main_ip
       user        = "root"
-      private_key = file("~/.ssh/id_rsa")
+      private_key = file("/root/.ssh/id_rsa")
     }
   }
 }

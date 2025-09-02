@@ -1,0 +1,11 @@
+{
+    "name": "Terraform Dev Container",
+    "image": "hashicorp/terraform:latest",
+    "workspaceFolder": "/workspace",
+    "mounts": [
+        "source=/Users/stephanemetairie/.ssh,target=/root/.ssh,type=bind,consistency=cached",
+        "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+    ],
+    "settings": {},
+    "extensions": []
+}
