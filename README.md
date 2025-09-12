@@ -1,27 +1,40 @@
 # Feature Craft
 
-Takes all tickets in a Kubernetes Project, assigned to the BOT, and code the fix.
+The purpose of this project is to provide a bot that helps create, update, maintain a standard kubernetes project.
 
-The Kubernetes Project hosts a CICD pipeline. Each time a ticket is fixed (Pull Request / Merge Request) a whole redeploy is performed, a pipeline with tests is played.
+Use cases: add a new feature, advisor, maintain, ... 
 
-It's possible to reset Kubernetes Project, and redo the fix at any time, according to a new version of Featurecraft Platform or any change of LLM.
+How to use ? This is the workflow expected:
+ - assign a ticket to the bot in a Kubernetes Project,
+ - the pipeline CICD starts the bot,
+ - the bot does the expected work,
+ - the bot creates a PR/MR,
 
-A report with benchmark is written for every run.
+## Requirements
 
-## Design
+Support only this tools and version for the moment:
 
-Multi layers Bot. The update for a ticket could target one of these layers.
+ - github
+ - kubectl and git latest
+ - training data 
 
-- specifications
-- code infra
-- code app
-- configuration
+## Features
 
-The bot should be onboard the first time it is launched, for discovering:
-- code repository
-- documentation project, specificities
-- versions of components and dependancies
-- general behaviour (conservative/... configuration files not managed by IA, ...)
+ - request/reply,
+ - create/update code repository,
+ - git lifecycle,
+ - history and memory (redo the fix at any time - outcome is stable),
+ - kubernetes trained LLM,
+ - chatbot for asking about kubernetes,
+ - tools kubectl, git, ...
+ - a report with benchmark is written for every run,
+
+## How it's working
+
+This project build an OCI image embedding kubectl, LLMs, MCP, workflow engine, git, training data, ... 
+
+Once the container is running, run a command.
+
 
 ## 1/ Install platform
 ### 1a/ Pre-requisites
@@ -91,7 +104,6 @@ terraform destroy -target local_file.compose
 
 ## API
 
-
 ```bash
 curl -k -X "GET" "https://$TF_VAR_domain/api/v1/workflows?active=true" \
   -H "accept: application/json" \
@@ -101,6 +113,19 @@ curl -k -X "GET" "https://$TF_VAR_domain/api/v1/workflows?active=true" \
   -H "accept: application/json" -H "'Authorization: Bearer $TF_VAR_n8n_api_key'" -H "'X-N8N-API-KEY: $TF_VAR_n8n_api_key'"
 ```
 
+# Future implementation
 
-## TODO
-replace private_key = file("/home/.ssh/id_rsa") => ${HOME}
+#TODO replace private_key = file("/home/.ssh/id_rsa") => ${HOME}
+
+#TODO experimental design
+Multi layers Bot. The update for a ticket could target one of these layers.
+- specifications
+- code infra
+- code app
+- configuration
+
+The bot should be onboard the first time it is launched, for discovering:
+- code repository
+- documentation project, specificities
+- versions of components and dependancies
+- general behaviour (conservative/... configuration files not managed by IA, ...)
