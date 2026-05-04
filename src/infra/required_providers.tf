@@ -2,7 +2,7 @@ terraform {
   required_providers {
     vultr = {
       source  = "vultr/vultr"
-      version = "2.26.0"
+      version = "2.31.0"
     }
     # porkbun = {
     #   source  = "kyswtn/porkbun"

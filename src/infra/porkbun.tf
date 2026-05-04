@@ -1,4 +1,4 @@
-resource "porkbun_dns_record" "n8n_a_record" {
+resource "porkbun_dns_record" "fc_a_record" {
   # This resource creates an A record for the n8n instance on Porkbun
   type   = "A"
   domain = var.porkbun_domain

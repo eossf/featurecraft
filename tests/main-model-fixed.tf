@@ -139,110 +139,110 @@ resource "null_resource" "install_docker_with_ansible" {
   }
 }
 
-# docker compose file using template_file data source
-# 
-data "template_file" "compose" {
-  template = <<-EOT
-volumes:
-  postgres-data:
-    driver: local
-  kestra-data:
-    driver: local
+# # docker compose file using template_file data source
+# # 
+# data "template_file" "compose" {
+#   template = <<-EOT
+# volumes:
+#   postgres-data:
+#     driver: local
+#   kestra-data:
+#     driver: local
 
-services:
-  postgres:
-    image: postgres
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: kestra
-      POSTGRES_USER: "${var.kestra_username}"
-      POSTGRES_PASSWORD: "${var.kestra_password}"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d ${var.kestra_username} -U ${var.kestra_username}"]
-      interval: 30s
-      timeout: 10s
-      retries: 10
+# services:
+#   postgres:
+#     image: postgres
+#     volumes:
+#       - postgres-data:/var/lib/postgresql/data
+#     environment:
+#       POSTGRES_DB: kestra
+#       POSTGRES_USER: "${var.kestra_username}"
+#       POSTGRES_PASSWORD: "${var.kestra_password}"
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -d ${var.kestra_username} -U ${var.kestra_username}"]
+#       interval: 30s
+#       timeout: 10s
+#       retries: 10
 
-  kestra:
-    image: kestra/kestra:latest
-    pull_policy: always
-    user: "root"
-    command: server standalone
-    volumes:
-      - kestra-data:/app/storage
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp/kestra-wd:/tmp/kestra-wd
-    environment:
-      KESTRA_CONFIGURATION: |
-        datasources:
-          postgres:
-            url: jdbc:postgresql://postgres:5432/kestra
-            driverClassName: org.postgresql.Driver
-            username: "${var.kestra_username}"
-            password: "${var.kestra_password}"
-        kestra:
-          server:
-            basicAuth:
-              enabled: false
-              username: "${var.kestra_username}"
-              password: "${var.kestra_password}"
-            repository:
-              type: postgres
-            storage:
-              type: local
-              local:
-                basePath: "/app/storage"
-            queue:
-              type: postgres
-            tasks:
-              tmpDir:
-                path: /tmp/kestra-wd/tmp
-            url: http://localhost:8080/
-    ports:
-      - "8080:8080"
-      - "8081:8081"
-    depends_on:
-      postgres:
-        condition: service_started
-EOT
+#   kestra:
+#     image: kestra/kestra:latest
+#     pull_policy: always
+#     user: "root"
+#     command: server standalone
+#     volumes:
+#       - kestra-data:/app/storage
+#       - /var/run/docker.sock:/var/run/docker.sock
+#       - /tmp/kestra-wd:/tmp/kestra-wd
+#     environment:
+#       KESTRA_CONFIGURATION: |
+#         datasources:
+#           postgres:
+#             url: jdbc:postgresql://postgres:5432/kestra
+#             driverClassName: org.postgresql.Driver
+#             username: "${var.kestra_username}"
+#             password: "${var.kestra_password}"
+#         kestra:
+#           server:
+#             basicAuth:
+#               enabled: false
+#               username: "${var.kestra_username}"
+#               password: "${var.kestra_password}"
+#             repository:
+#               type: postgres
+#             storage:
+#               type: local
+#               local:
+#                 basePath: "/app/storage"
+#             queue:
+#               type: postgres
+#             tasks:
+#               tmpDir:
+#                 path: /tmp/kestra-wd/tmp
+#             url: http://localhost:8080/
+#     ports:
+#       - "8080:8080"
+#       - "8081:8081"
+#     depends_on:
+#       postgres:
+#         condition: service_started
+# EOT
 
-  vars = {
-    kestra_username = var.kestra_username
-    kestra_password = var.kestra_password
-  }
-}
+#   vars = {
+#     kestra_username = var.kestra_username
+#     kestra_password = var.kestra_password
+#   }
+# }
 
-resource "local_file" "compose" {
-  content  = data.template_file.compose.rendered
-  filename = "${path.module}/docker-compose.yaml"
-}
+# resource "local_file" "compose" {
+#   content  = data.template_file.compose.rendered
+#   filename = "${path.module}/docker-compose.yaml"
+# }
 
-resource "null_resource" "launch_kestra" {
-  depends_on = [null_resource.install_docker_with_ansible, local_file.compose]
+# resource "null_resource" "launch_kestra" {
+#   depends_on = [null_resource.install_docker_with_ansible, local_file.compose]
 
-  provisioner "file" {
-    source      = local_file.compose.filename
-    destination = "/root/docker-compose.yaml"
+#   provisioner "file" {
+#     source      = local_file.compose.filename
+#     destination = "/root/docker-compose.yaml"
 
-    connection {
-      type        = "ssh"
-      host        = vultr_instance.current.main_ip
-      user        = "root"
-      private_key = file("~/.ssh/id_rsa")
-    }
-  }
+#     connection {
+#       type        = "ssh"
+#       host        = vultr_instance.current.main_ip
+#       user        = "root"
+#       private_key = file("~/.ssh/id_rsa")
+#     }
+#   }
 
-  provisioner "remote-exec" {
-    inline = [
-      "docker compose up -d --force-recreate --remove-orphans",
-    ]
+#   provisioner "remote-exec" {
+#     inline = [
+#       "docker compose up -d --force-recreate --remove-orphans",
+#     ]
 
-    connection {
-      type        = "ssh"
-      host        = vultr_instance.current.main_ip
-      user        = "root"
-      private_key = file("~/.ssh/id_rsa")
-    }
-  }
-}
+#     connection {
+#       type        = "ssh"
+#       host        = vultr_instance.current.main_ip
+#       user        = "root"
+#       private_key = file("~/.ssh/id_rsa")
+#     }
+#   }
+# }
